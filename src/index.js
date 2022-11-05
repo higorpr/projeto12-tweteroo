@@ -22,7 +22,7 @@ const users = [user];
 const tweets = [tweet];
 
 function userExists(username) {
-    return users.some((u) => u.username === username)
+    return users.some((u) => u.username === username);
 }
 
 app.post("/sign-up", (req, res) => {
@@ -53,8 +53,8 @@ app.post("/tweets", (req, res) => {
         tweets.push(newTweet);
         res.status(201).send("OK");
     } else {
-        res.status(404).send('This user does not exist')
-        return
+        res.status(404).send("This user does not exist");
+        return;
     }
 });
 
@@ -62,9 +62,7 @@ app.get("/tweets", (req, res) => {
     let output = [];
     const lastTen = tweets.slice(-10).reverse();
     lastTen.forEach((t) => {
-        // console.log("Tweet: ",t)
         const targetUser = users.find((obj) => obj.username === t.username);
-        // console.log(targetUser)
         const image = targetUser.avatar;
         const userTweet = {
             username: t.username,
@@ -76,9 +74,33 @@ app.get("/tweets", (req, res) => {
     res.status(200).send(output);
 });
 
-app.get("/sign-up", (req,res) => {
-    res.status(201).send(users)
-})
+app.get("/tweets/:username", (req, res) => {
+    const { username } = req.params;
+    if (userExists(username)) {
+        let userTweets = [];
+        const userAvatar = users.find(
+            (obj) => obj.username === username
+        ).avatar;
+
+        tweets.forEach((t) => {
+            if (username === t.username) {
+                const userTweet = {
+                    username: t.username,
+                    avatar: userAvatar,
+                    tweet: t.tweet,
+                };
+                userTweets.push(userTweet);
+            }
+        });
+        res.status(200).send(userTweets);
+    } else {
+        res.status(404).send('This user does not exist.')
+    }
+});
+
+app.get("/sign-up", (req, res) => {
+    res.status(201).send(users);
+});
 
 app.listen(port, () => {
     console.log(`App running on port ${port}.`);
