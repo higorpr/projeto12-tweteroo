@@ -21,6 +21,10 @@ const tweet = {
 const users = [user];
 const tweets = [tweet];
 
+function userExists(username) {
+    return users.some((u) => u.username === username)
+}
+
 app.post("/sign-up", (req, res) => {
     const { username, avatar } = req.body;
     if (!username || !avatar) {
@@ -38,36 +42,43 @@ app.post("/sign-up", (req, res) => {
 
 app.post("/tweets", (req, res) => {
     const { username, tweet } = req.body;
-    if (!username || !avatar) {
+    if (!username || !tweet) {
         res.status(400).send("Todos os campos são obrigatórios");
         return;
-    } else {
+    } else if (userExists(username)) {
         const newTweet = {
             username,
             tweet,
         };
         tweets.push(newTweet);
         res.status(201).send("OK");
+    } else {
+        res.status(404).send('This user does not exist')
+        return
     }
 });
 
 app.get("/tweets", (req, res) => {
-    let output = tweets;
-    const lastTen = tweets.slice(-10);
+    let output = [];
+    const lastTen = tweets.slice(-10).reverse();
     lastTen.forEach((t) => {
         // console.log("Tweet: ",t)
         const targetUser = users.find((obj) => obj.username === t.username);
         // console.log(targetUser)
-        // const image = targetUser.avatar;
+        const image = targetUser.avatar;
         const userTweet = {
             username: t.username,
-            // avatar: image,
+            avatar: image,
             tweet: t.tweet,
         };
         output.push(userTweet);
     });
     res.status(200).send(output);
 });
+
+app.get("/sign-up", (req,res) => {
+    res.status(201).send(users)
+})
 
 app.listen(port, () => {
     console.log(`App running on port ${port}.`);
