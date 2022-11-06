@@ -8,18 +8,18 @@ app.use(json());
 const port = 5000;
 
 //server variables and constants
-const user = {
-    username: "Higor",
-    avatar: "https://avatars.githubusercontent.com/u/83566539?v=4",
-};
+// const user = {
+//     username: "Higor",
+//     avatar: "https://avatars.githubusercontent.com/u/83566539?v=4",
+// };
 
-const tweet = {
-    username: "Higor",
-    tweet: "Tiramos o BolsoLixo!",
-};
+// const tweet = {
+//     username: "Higor",
+//     tweet: "Tiramos o BolsoLixo!",
+// };
 
-const users = [user];
-const tweets = [tweet];
+const users = [];
+const tweets = [];
 
 function userExists(username) {
     return users.some((u) => u.username === username);
@@ -42,7 +42,7 @@ app.post("/sign-up", (req, res) => {
 
 app.post("/tweets", (req, res) => {
     const { tweet } = req.body;
-    const username = req.headers.user
+    const username = req.headers.user;
     if (!username || !tweet) {
         res.status(400).send("Todos os campos são obrigatórios");
         return;
@@ -60,19 +60,27 @@ app.post("/tweets", (req, res) => {
 });
 
 app.get("/tweets", (req, res) => {
-    let output = [];
-    const lastTen = tweets.slice(-10).reverse();
-    lastTen.forEach((t) => {
-        const targetUser = users.find((obj) => obj.username === t.username);
-        const image = targetUser.avatar;
-        const userTweet = {
-            username: t.username,
-            avatar: image,
-            tweet: t.tweet,
-        };
-        output.push(userTweet);
-    });
-    res.status(200).send(output);
+    const page = parseInt(req.query.page) ? parseInt(req.query.page) : 1;
+    const orderedTweets = [...tweets].reverse();
+    if (page >= 1) {
+        let outputTweets = [];
+        const iniPos = (page - 1) * 10;
+        const finalPos = page * 10;
+        const targetTweets = orderedTweets.slice(iniPos, finalPos);
+        targetTweets.forEach((t) => {
+            const targetUser = users.find((obj) => obj.username === t.username);
+            const image = targetUser.avatar;
+            const userTweet = {
+                username: t.username,
+                avatar: image,
+                tweet: t.tweet,
+            };
+            outputTweets.push(userTweet);
+        });
+        res.status(200).send(outputTweets);
+    } else {
+        res.status(400).send("Informe uma página válida!");
+    }
 });
 
 app.get("/tweets/:username", (req, res) => {
@@ -95,7 +103,7 @@ app.get("/tweets/:username", (req, res) => {
         });
         res.status(200).send(userTweets);
     } else {
-        res.status(404).send('This user does not exist.')
+        res.status(404).send("This user does not exist.");
     }
 });
 
